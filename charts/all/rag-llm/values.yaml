@@ -172,7 +172,7 @@ populateDbJob:
 
   doc_git_repo: https://github.com/RHEcosystemAppEng/llm-on-openshift.git
   doc_location: examples/notebooks/langchain/rhods-doc
-  doc_dir: /docs
+  doc_dir: /tmp
 
 
   # By default, fullname uses '{{ .Release.Name }}-{{ .Chart.Name }}'. This

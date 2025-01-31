@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name:  populate-mssql-{{ include "rag-llm.fullname" . }}
+spec:
+  template:
+    spec:
+      containers:
+      - image: registry.access.redhat.com/ubi9/python-311 #"{{ .Values.populateDbJob.image.repository }}:{{ .Values.populateDbJob.image.tag }}"
+        name: populate-vectordb
+        env:
+        - name: DOC_GIT_REPO
+          value: {{ .Values.populateDbJob.doc_git_repo | quote }}
+        - name: DOC_LOCATION
+          value:  {{ .Values.populateDbJob.doc_location | quote }}
+        - name: TEMP_DIR
+          value: {{ .Values.populateDbJob.doc_dir | quote }}
+        - name: MSSQL_URL
+          value: 'mssql+psycopg://$(DB_USERNAME):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)'
+        volumeMounts:
+          - mountPath: /opt/app-root/src/populate-mssql.py
+            name: populate-mssql
+            subPath: populate-mssql.py
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - >-
+              pip install langchain_community langchain-text-splitters langchain_sqlserver langchain_huggingface &&
+              git clone ${DOC_GIT_REPO} ${TEMP_DIR}/source_repo &&
+              python /opt/app-root/src/populate-mssql.py
+      volumes:
+        - name: populate-mssql
+          configMap:
+            name: populate-mssql
+      restartPolicy: Never
